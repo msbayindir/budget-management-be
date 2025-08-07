@@ -31,7 +31,7 @@ export const getExpenses = async (userId: string, query: ExpenseQueryDto) => {
   const skip = (page - 1) * limit;
 
   // Build where clause
-  const where: any = { userId };
+  const where: any = { userId, isDeleted: false };
 
   if (category) {
     where.category = { contains: category, mode: 'insensitive' };
@@ -80,6 +80,7 @@ export const getExpenseById = async (userId: string, expenseId: string) => {
     where: {
       id: expenseId,
       userId,
+      isDeleted: false,
     },
     include: {
       user: {
@@ -106,6 +107,7 @@ export const updateExpense = async (userId: string, expenseId: string, data: Upd
     where: {
       id: expenseId,
       userId,
+      isDeleted: false,
     },
   });
 
