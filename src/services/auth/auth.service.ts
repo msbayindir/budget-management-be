@@ -2,7 +2,6 @@ import prisma from '../../config/database';
 import { hashPassword, comparePassword } from '../../utils/password';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../../utils/jwt';
 import { RegisterDto, LoginDto, RefreshTokenDto } from '../../validations/auth.validation';
-import { tokenCache } from '../../utils/cache';
 
 // User registration function
 export const registerUser = async (data: RegisterDto) => {
@@ -46,9 +45,6 @@ export const registerUser = async (data: RegisterDto) => {
     },
   });
 
-  // Set cache
-  tokenCache.set(`user_${user.id}_active`, true);
-
   return {
     user,
     accessToken,
@@ -90,9 +86,6 @@ export const loginUser = async (data: LoginDto) => {
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
     },
   });
-
-  // Update cache
-  tokenCache.set(`user_${user.id}_active`, true);
 
   return {
     user: {
@@ -146,9 +139,6 @@ export const refreshUserToken = async (data: RefreshTokenDto) => {
       }),
     ]);
 
-    // Update cache
-    tokenCache.set(`user_${storedToken.user.id}_active`, true);
-
     return {
       accessToken,
       refreshToken: newRefreshToken,
@@ -164,7 +154,4 @@ export const logoutUser = async (userId: string) => {
   await prisma.refreshToken.deleteMany({
     where: { userId },
   });
-
-  // Clear cache
-  tokenCache.delete(`user_${userId}_active`);
 };

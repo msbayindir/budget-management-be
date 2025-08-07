@@ -2,7 +2,6 @@ import { Request, Response, NextFunction } from 'express';
 import { verifyAccessToken, JwtPayload } from '../utils/jwt';
 import { error } from '../utils/thrower';
 import prisma from '../config/database';
-import { tokenCache } from '../utils/cache';
 
 declare global {
   namespace Express {
@@ -25,24 +24,15 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
     // Normal JWT doğrulama
     const decoded = verifyAccessToken(token);
     
-    // Cache'te kontrol et
-    const cacheKey = `user_${decoded.userId}_active`;
-    let hasActiveToken = tokenCache.get(cacheKey);
+    // Bu kullanıcının aktif refresh token'ı var mı kontrol et
+    const activeRefreshToken = await prisma.refreshToken.findFirst({
+      where: { 
+        userId: decoded.userId,
+        expiresAt: { gt: new Date() } // Süresi geçmemiş
+      }
+    });
     
-    if (hasActiveToken === null) {
-      // Cache'te yok, veritabanından kontrol et
-      const activeRefreshToken = await prisma.refreshToken.findFirst({
-        where: { 
-          userId: decoded.userId,
-          expiresAt: { gt: new Date() } // Süresi geçmemiş
-        }
-      });
-      
-      hasActiveToken = !!activeRefreshToken;
-      tokenCache.set(cacheKey, hasActiveToken);
-    }
-    
-    if (!hasActiveToken) {
+    if (!activeRefreshToken) {
       error(res, 'Session expired. Please login again.', 401);
       return;
     }
