@@ -121,25 +121,18 @@ export const refreshToken = async (req: Request, res: Response) => {
  *     tags: [Auth]
  *     security:
  *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - refreshToken
- *             properties:
- *               refreshToken:
- *                 type: string
  *     responses:
  *       200:
  *         description: Logout successful
  */
 export const logout = async (req: Request, res: Response) => {
   try {
-    const { refreshToken } = req.body;
-    await logoutUser(refreshToken);
+    const userId = req.user?.userId;
+    if (!userId) {
+      return error(res, 'Authentication required', 401);
+    }
+    
+    await logoutUser(userId);
     return success(res, 'Logout successful');
   } catch (err: any) {
     return error(res, err.message, 400);

@@ -11,6 +11,7 @@ import {
 } from '../controllers/expense.controller';
 import { validateBody, validateQuery } from '../middlewares/validation.middleware';
 import { authenticateToken } from '../middlewares/auth.middleware';
+import { checkExpenseOwnership, enforceUserOwnership } from '../middlewares/ownership.middleware';
 import { createExpenseSchema, updateExpenseSchema, expenseQuerySchema } from '../validations/expense.validation';
 
 const router: Router = Router();
@@ -24,10 +25,10 @@ router.get('/analytics/categories', getCategoryAnalyticsController);
 router.get('/analytics/top-category', getTopCategoryController);
 
 // CRUD operations
-router.post('/', validateBody(createExpenseSchema), createExpenseController);
+router.post('/', enforceUserOwnership(), validateBody(createExpenseSchema), createExpenseController);
 router.get('/', validateQuery(expenseQuerySchema), getExpensesController);
-router.get('/:id', getExpenseByIdController);
-router.put('/:id', validateBody(updateExpenseSchema), updateExpenseController);
-router.delete('/:id', deleteExpenseController);
+router.get('/:id', checkExpenseOwnership, getExpenseByIdController);
+router.put('/:id', checkExpenseOwnership, enforceUserOwnership(), validateBody(updateExpenseSchema), updateExpenseController);
+router.delete('/:id', checkExpenseOwnership, deleteExpenseController);
 
 export default router;

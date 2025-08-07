@@ -2,6 +2,7 @@ import prisma from '../../config/database';
 import { hashPassword, comparePassword } from '../../utils/password';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../../utils/jwt';
 import { RegisterDto, LoginDto, RefreshTokenDto } from '../../validations/auth.validation';
+import { tokenCache } from '../../utils/cache';
 
 // User registration function
 export const registerUser = async (data: RegisterDto) => {
@@ -45,6 +46,9 @@ export const registerUser = async (data: RegisterDto) => {
     },
   });
 
+  // Set cache
+  tokenCache.set(`user_${user.id}_active`, true);
+
   return {
     user,
     accessToken,
@@ -69,11 +73,16 @@ export const loginUser = async (data: LoginDto) => {
     throw new Error('Invalid email or password');
   }
 
+  // Single session policy: Delete all existing refresh tokens for this user
+  await prisma.refreshToken.deleteMany({
+    where: { userId: user.id },
+  });
+
   // Generate tokens
   const accessToken = generateAccessToken({ userId: user.id, email: user.email });
   const refreshToken = generateRefreshToken({ userId: user.id, email: user.email });
 
-  // Save refresh token to database
+  // Save new refresh token to database
   await prisma.refreshToken.create({
     data: {
       token: refreshToken,
@@ -81,6 +90,9 @@ export const loginUser = async (data: LoginDto) => {
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
     },
   });
+
+  // Update cache
+  tokenCache.set(`user_${user.id}_active`, true);
 
   return {
     user: {
@@ -134,6 +146,9 @@ export const refreshUserToken = async (data: RefreshTokenDto) => {
       }),
     ]);
 
+    // Update cache
+    tokenCache.set(`user_${storedToken.user.id}_active`, true);
+
     return {
       accessToken,
       refreshToken: newRefreshToken,
@@ -143,10 +158,13 @@ export const refreshUserToken = async (data: RefreshTokenDto) => {
   }
 };
 
-// Logout function
-export const logoutUser = async (refreshToken: string) => {
-  // Delete refresh token from database
+// Logout function - now uses userId from access token
+export const logoutUser = async (userId: string) => {
+  // Delete all refresh tokens for this user (logout from all devices)
   await prisma.refreshToken.deleteMany({
-    where: { token: refreshToken },
+    where: { userId },
   });
+
+  // Clear cache
+  tokenCache.delete(`user_${userId}_active`);
 };
