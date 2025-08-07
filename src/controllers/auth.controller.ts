@@ -44,7 +44,6 @@ export const register = async (req: Request, res: Response) => {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      path: '/api/auth/refresh',
       domain: process.env.NODE_ENV === 'production' ? process.env.COOKIE_DOMAIN : undefined
     });
 
@@ -95,7 +94,6 @@ export const login = async (req: Request, res: Response) => {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      path: '/api/auth/refresh',
       domain: process.env.NODE_ENV === 'production' ? process.env.COOKIE_DOMAIN : undefined
     });
     
@@ -149,7 +147,6 @@ export const refreshToken = async (req: Request, res: Response) => {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      path: '/api/auth/refresh',
       domain: process.env.NODE_ENV === 'production' ? process.env.COOKIE_DOMAIN : undefined
     });
     
@@ -185,7 +182,6 @@ export const logout = async (req: Request, res: Response) => {
     
     // Clear refresh token cookie
     res.clearCookie('refreshToken', {
-      path: '/api/auth/refresh',
       domain: process.env.NODE_ENV === 'production' ? process.env.COOKIE_DOMAIN : undefined
     });
     
