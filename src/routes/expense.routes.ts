@@ -8,7 +8,8 @@ import {
   getMonthlyAnalyticsController,
   getCategoryAnalyticsController,
   getTopCategoryController,
-  exportExpensesCSVController
+  exportExpensesCSVController,
+  getMonthlyPDFReportController
 } from '../controllers/expense.controller';
 import { validateBody, validateQuery } from '../middlewares/validation.middleware';
 import { authenticateToken } from '../middlewares/auth.middleware';
@@ -28,6 +29,9 @@ router.get('/analytics/top-category', getTopCategoryController);
 
 // Export routes
 router.get('/export/csv', validateQuery(expenseQuerySchema), exportExpensesCSVController);
+
+// Report routes
+router.get('/reports/monthly-pdf', getMonthlyPDFReportController);
 
 
 router.post('/', enforceUserOwnership(), validateBody(createExpenseSchema), createExpenseController);

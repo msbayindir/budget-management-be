@@ -8,7 +8,8 @@ import {
   getMonthlyTotal, 
   getCategoryAnalysis, 
   getTopCategory,
-  getExpensesForCSV 
+  getExpensesForCSV,
+  getMonthlyPDFReport 
 } from '../services/expense/expense.service';
 import { success, error } from '../utils/thrower';
 import { sendPrismaError } from '../utils/prismaErrorHandler';
@@ -430,6 +431,99 @@ export const exportExpensesCSVController = async (req: Request, res: Response) =
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     
     return res.send(csvContent);
+  } catch (err: any) {
+    return error(res, err.message, 400);
+  }
+};
+
+/**
+ * @swagger
+ * /api/expenses/reports/monthly-pdf:
+ *   get:
+ *     summary: Get monthly PDF report data (JSON format)
+ *     tags: [Reports]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: year
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Year for the report
+ *       - in: query
+ *         name: month
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 12
+ *         description: Month for the report (1-12)
+ *     responses:
+ *       200:
+ *         description: Monthly PDF report data retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 reportInfo:
+ *                   type: object
+ *                   properties:
+ *                     generatedAt:
+ *                       type: string
+ *                       format: date-time
+ *                     period:
+ *                       type: object
+ *                     user:
+ *                       type: object
+ *                 summary:
+ *                   type: object
+ *                   properties:
+ *                     totalAmount:
+ *                       type: number
+ *                     totalTransactions:
+ *                       type: integer
+ *                     averageTransaction:
+ *                       type: number
+ *                 categoryBreakdown:
+ *                   type: array
+ *                 weeklyBreakdown:
+ *                   type: array
+ *                 topExpenses:
+ *                   type: array
+ *                 insights:
+ *                   type: object
+ *       400:
+ *         description: Invalid parameters
+ *       401:
+ *         description: Unauthorized
+ */
+export const getMonthlyPDFReportController = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const { year, month } = req.query;
+    
+    // Validate required parameters
+    if (!year || !month) {
+      return error(res, 'Year and month parameters are required', 400);
+    }
+    
+    const yearParam = parseInt(year as string);
+    const monthParam = parseInt(month as string);
+    
+    // Validate year and month ranges
+    if (isNaN(yearParam) || yearParam < 1900 || yearParam > 2100) {
+      return error(res, 'Invalid year parameter', 400);
+    }
+    
+    if (isNaN(monthParam) || monthParam < 1 || monthParam > 12) {
+      return error(res, 'Invalid month parameter (must be 1-12)', 400);
+    }
+    
+    const reportData = await getMonthlyPDFReport(userId, yearParam, monthParam);
+    
+    return success(res, 'Monthly PDF report data retrieved successfully', reportData);
   } catch (err: any) {
     return error(res, err.message, 400);
   }
