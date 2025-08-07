@@ -7,7 +7,8 @@ import {
   deleteExpenseController,
   getMonthlyAnalyticsController,
   getCategoryAnalyticsController,
-  getTopCategoryController
+  getTopCategoryController,
+  exportExpensesCSVController
 } from '../controllers/expense.controller';
 import { validateBody, validateQuery } from '../middlewares/validation.middleware';
 import { authenticateToken } from '../middlewares/auth.middleware';
@@ -24,6 +25,9 @@ router.use(authenticateToken);
 router.get('/analytics/monthly', getMonthlyAnalyticsController);
 router.get('/analytics/categories', getCategoryAnalyticsController);
 router.get('/analytics/top-category', getTopCategoryController);
+
+// Export routes
+router.get('/export/csv', validateQuery(expenseQuerySchema), exportExpensesCSVController);
 
 
 router.post('/', enforceUserOwnership(), validateBody(createExpenseSchema), createExpenseController);

@@ -7,7 +7,8 @@ import {
   deleteExpense as deleteExpenseService, 
   getMonthlyTotal, 
   getCategoryAnalysis, 
-  getTopCategory 
+  getTopCategory,
+  getExpensesForCSV 
 } from '../services/expense/expense.service';
 import { success, error } from '../utils/thrower';
 import { sendPrismaError } from '../utils/prismaErrorHandler';
@@ -357,6 +358,78 @@ export const getTopCategoryController = async (req: Request, res: Response) => {
     const monthParam = month ? parseInt(month as string) : undefined;
     const result = await getTopCategory(userId, yearParam, monthParam);
     return success(res, 'Top category retrieved successfully', result);
+  } catch (err: any) {
+    return error(res, err.message, 400);
+  }
+};
+
+/**
+ * @swagger
+ * /api/expenses/export/csv:
+ *   get:
+ *     summary: Export expenses as CSV
+ *     tags: [Expenses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *         description: Filter by category
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         description: Filter by start date
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         description: Filter by end date
+ *     responses:
+ *       200:
+ *         description: CSV file downloaded successfully
+ *         content:
+ *           text/csv:
+ *             schema:
+ *               type: string
+ *       401:
+ *         description: Unauthorized
+ */
+export const exportExpensesCSVController = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const query: ExpenseQueryDto = req.query as any;
+    
+    const expenses = await getExpensesForCSV(userId, query);
+    
+    // Create CSV headers
+    const headers = ['ID', 'Amount', 'Category', 'Description', 'Date', 'Created At'];
+    
+    // Create CSV rows
+    const csvRows = expenses.map(expense => [
+      expense.id,
+      expense.amount.toString(),
+      expense.category,
+      expense.description || '',
+      expense.date.toISOString().split('T')[0], // Format as YYYY-MM-DD
+      expense.createdAt.toISOString().split('T')[0] // Format as YYYY-MM-DD
+    ]);
+    
+    // Combine headers and rows
+    const csvContent = [headers, ...csvRows]
+      .map(row => row.map(field => `"${field}"`).join(','))
+      .join('\n');
+    
+    // Set response headers for CSV download
+    const filename = `expenses_${new Date().toISOString().split('T')[0]}.csv`;
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    
+    return res.send(csvContent);
   } catch (err: any) {
     return error(res, err.message, 400);
   }

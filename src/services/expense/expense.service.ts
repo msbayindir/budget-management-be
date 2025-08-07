@@ -251,3 +251,34 @@ export const getTopCategory = async (userId: string, year?: number, month?: numb
     percentage: analysis.categories[0].percentage,
   };
 };
+
+export const getExpensesForCSV = async (userId: string, query: ExpenseQueryDto) => {
+  const { category, startDate, endDate } = query;
+
+  const where: any = { userId, isDeleted: false };
+
+  if (category) {
+    where.category = { contains: category, mode: 'insensitive' };
+  }
+
+  if (startDate || endDate) {
+    where.date = {};
+    if (startDate) where.date.gte = startDate;
+    if (endDate) where.date.lte = endDate;
+  }
+
+  const expenses = await prisma.expense.findMany({
+    where,
+    orderBy: { date: 'desc' },
+    select: {
+      id: true,
+      amount: true,
+      category: true,
+      description: true,
+      date: true,
+      createdAt: true,
+    },
+  });
+
+  return expenses;
+};
