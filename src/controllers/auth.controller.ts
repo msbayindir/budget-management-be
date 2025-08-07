@@ -38,16 +38,16 @@ export const register = async (req: Request, res: Response) => {
     const data: RegisterDto = req.body;
     const result = await registerUser(data);
     
-    // Set refresh token as HttpOnly cookie
+
     res.cookie('refreshToken', result.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      path: '/api/auth/refresh'
+      path: '/api/auth/refresh',
+      domain: process.env.NODE_ENV === 'production' ? process.env.COOKIE_DOMAIN : undefined
     });
-    
-    // Only return access token and user data
+
     return success(res, 'User registered successfully', {
       user: result.user,
       accessToken: result.accessToken
@@ -89,16 +89,16 @@ export const login = async (req: Request, res: Response) => {
     const data: LoginDto = req.body;
     const result = await loginUser(data);
     
-    // Set refresh token as HttpOnly cookie
+
     res.cookie('refreshToken', result.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      path: '/api/auth/refresh'
+      path: '/api/auth/refresh',
+      domain: process.env.NODE_ENV === 'production' ? process.env.COOKIE_DOMAIN : undefined
     });
     
-    // Only return access token and user data
     return success(res, 'Login successful', {
       user: result.user,
       accessToken: result.accessToken
@@ -135,7 +135,6 @@ export const login = async (req: Request, res: Response) => {
  */
 export const refreshToken = async (req: Request, res: Response) => {
   try {
-    // Get refresh token from cookie instead of body
     const refreshToken = req.cookies.refreshToken;
     
     if (!refreshToken) {
@@ -150,7 +149,8 @@ export const refreshToken = async (req: Request, res: Response) => {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      path: '/api/auth/refresh'
+      path: '/api/auth/refresh',
+      domain: process.env.NODE_ENV === 'production' ? process.env.COOKIE_DOMAIN : undefined
     });
     
     // Only return new access token
@@ -185,7 +185,8 @@ export const logout = async (req: Request, res: Response) => {
     
     // Clear refresh token cookie
     res.clearCookie('refreshToken', {
-      path: '/api/auth/refresh'
+      path: '/api/auth/refresh',
+      domain: process.env.NODE_ENV === 'production' ? process.env.COOKIE_DOMAIN : undefined
     });
     
     return success(res, 'Logout successful');

@@ -4,11 +4,9 @@ import prisma from './config/database';
 
 const startServer = async () => {
   try {
-    // Test database connection
     await prisma.$connect();
     console.log('✅ Database connected successfully');
 
-    // Start server
     app.listen(config.port, () => {
       console.log(`🚀 Server running on port ${config.port}`);
       console.log(`📚 API Documentation: http://localhost:${config.port}/api-docs`);
@@ -21,7 +19,7 @@ const startServer = async () => {
   }
 };
 
-// Handle graceful shutdown
+
 process.on('SIGINT', async () => {
   console.log('\n🛑 Shutting down server...');
   await prisma.$disconnect();

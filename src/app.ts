@@ -9,7 +9,7 @@ import { errorHandler, notFoundHandler } from './middlewares/error.middleware';
 
 const app: Application = express();
 
-// Security middleware
+
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -27,13 +27,11 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false, // Swagger UI compatibility
 }));
 
-// CORS middleware
 app.use(cors({
   origin: config.cors.origin,
   credentials: true,
 }));
 
-// Cookie parser middleware (required for refresh token cookies)
 app.use(cookieParser());
 
 app.use(express.json({ limit: '10mb' }));
@@ -46,10 +44,10 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
   customSiteTitle: 'Budget Management API Documentation',
 }));
 
-// API routes
+
 app.use('/api', routes);
 
-// Root endpoint
+
 app.get('/', (req, res) => {
   res.json({
     message: 'Budget Management API',
@@ -60,7 +58,7 @@ app.get('/', (req, res) => {
   });
 });
 
-// Error handling middleware (must be last)
+
 app.use(notFoundHandler);
 app.use(errorHandler);
 

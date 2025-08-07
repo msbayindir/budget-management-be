@@ -28,7 +28,15 @@ export const generateRefreshToken = (payload: JwtPayload): string => {
 
 export const verifyAccessToken = (token: string): JwtPayload => {
   try {
-    return jwt.verify(token, config.jwt.accessSecret) as JwtPayload;
+
+    if (!token || typeof token !== 'string') {
+      throw new Error('Invalid token format');
+    }
+    
+
+    return jwt.verify(token, config.jwt.accessSecret, { 
+      algorithms: ['HS256'] 
+    }) as JwtPayload;
   } catch (error) {
     throw new Error('Invalid access token');
   }
@@ -36,7 +44,15 @@ export const verifyAccessToken = (token: string): JwtPayload => {
 
 export const verifyRefreshToken = (token: string): JwtPayload => {
   try {
-    return jwt.verify(token, config.jwt.refreshSecret) as JwtPayload;
+
+    if (!token || typeof token !== 'string') {
+      throw new Error('Invalid token format');
+    }
+    
+
+    return jwt.verify(token, config.jwt.refreshSecret, { 
+      algorithms: ['HS256'] 
+    }) as JwtPayload;
   } catch (error) {
     throw new Error('Invalid refresh token');
   }

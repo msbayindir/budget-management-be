@@ -2,8 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import { error } from './thrower';
 
 interface RateLimitOptions {
-  windowMs: number; // Time window in milliseconds
-  max: number; // Maximum requests per window
+  windowMs: number; 
+  max: number; 
   message?: string;
   keyGenerator?: (req: Request) => string;
 }
@@ -19,7 +19,6 @@ class RateLimiter {
       ...options
     };
 
-    // Clean expired entries every minute
     setInterval(() => this.cleanExpired(), 60 * 1000);
   }
 
@@ -40,7 +39,7 @@ class RateLimiter {
 
       let requestData = this.requests.get(key);
 
-      // If no data or window expired, reset
+
       if (!requestData || now > requestData.resetTime) {
         requestData = {
           count: 0,
@@ -51,7 +50,7 @@ class RateLimiter {
       requestData.count++;
       this.requests.set(key, requestData);
 
-      // Check if limit exceeded
+
       if (requestData.count > this.options.max) {
         const resetTime = Math.ceil((requestData.resetTime - now) / 1000);
         res.set({
@@ -64,7 +63,7 @@ class RateLimiter {
         return;
       }
 
-      // Set rate limit headers
+
       res.set({
         'X-RateLimit-Limit': this.options.max.toString(),
         'X-RateLimit-Remaining': (this.options.max - requestData.count).toString(),
@@ -76,7 +75,7 @@ class RateLimiter {
   }
 }
 
-// Pre-configured rate limiters
+
 export const authLimiter = new RateLimiter({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // 5 attempts per 15 minutes

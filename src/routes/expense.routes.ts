@@ -17,15 +17,15 @@ import { createExpenseSchema, updateExpenseSchema, expenseQuerySchema } from '..
 
 const router: Router = Router();
 
-// All routes require authentication
+
 router.use(authenticateToken);
 
-// Analytics endpoints (must be before /:id routes)
+
 router.get('/analytics/monthly', getMonthlyAnalyticsController);
 router.get('/analytics/categories', getCategoryAnalyticsController);
 router.get('/analytics/top-category', getTopCategoryController);
 
-// CRUD operations
+
 router.post('/', enforceUserOwnership(), validateBody(createExpenseSchema), createExpenseController);
 router.get('/', validateQuery(expenseQuerySchema), getExpensesController);
 router.get('/:id', validateObjectId('id'), checkExpenseOwnership, getExpenseByIdController);

@@ -1,7 +1,7 @@
 import prisma from '../../config/database';
 import { CreateExpenseDto, UpdateExpenseDto, ExpenseQueryDto } from '../../validations/expense.validation';
 
-// Create expense function
+
 export const createExpense = async (userId: string, data: CreateExpenseDto) => {
   const expense = await prisma.expense.create({
     data: {
@@ -25,12 +25,12 @@ export const createExpense = async (userId: string, data: CreateExpenseDto) => {
   return expense;
 };
 
-// Get expenses function
+
 export const getExpenses = async (userId: string, query: ExpenseQueryDto) => {
   const { category, startDate, endDate, page, limit } = query;
   const skip = (page - 1) * limit;
 
-  // Build where clause
+
   const where: any = { userId, isDeleted: false };
 
   if (category) {
@@ -43,7 +43,7 @@ export const getExpenses = async (userId: string, query: ExpenseQueryDto) => {
     if (endDate) where.date.lte = endDate;
   }
 
-  // Get expenses with pagination
+
   const [expenses, total] = await Promise.all([
     prisma.expense.findMany({
       where,
@@ -74,7 +74,7 @@ export const getExpenses = async (userId: string, query: ExpenseQueryDto) => {
   };
 };
 
-// Get expense by ID function
+
 export const getExpenseById = async (userId: string, expenseId: string) => {
   const expense = await prisma.expense.findFirst({
     where: {
@@ -100,9 +100,9 @@ export const getExpenseById = async (userId: string, expenseId: string) => {
   return expense;
 };
 
-// Update expense function
+
 export const updateExpense = async (userId: string, expenseId: string, data: UpdateExpenseDto) => {
-  // Check if expense exists and belongs to user
+
   const existingExpense = await prisma.expense.findFirst({
     where: {
       id: expenseId,
@@ -132,9 +132,9 @@ export const updateExpense = async (userId: string, expenseId: string, data: Upd
   return updatedExpense;
 };
 
-// Delete expense function
+
 export const deleteExpense = async (userId: string, expenseId: string) => {
-  // Check if expense exists and belongs to user
+
   const existingExpense = await prisma.expense.findFirst({
     where: {
       id: expenseId,
@@ -154,7 +154,7 @@ export const deleteExpense = async (userId: string, expenseId: string) => {
   return { message: 'Expense deleted successfully' };
 };
 
-// Get monthly total function
+
 export const getMonthlyTotal = async (userId: string, year: number, month: number) => {
   const startDate = new Date(year, month - 1, 1);
   const endDate = new Date(year, month, 0, 23, 59, 59);
@@ -179,7 +179,7 @@ export const getMonthlyTotal = async (userId: string, year: number, month: numbe
   };
 };
 
-// Get category analysis function
+
 export const getCategoryAnalysis = async (userId: string, year?: number, month?: number) => {
   let startDate: Date | undefined;
   let endDate: Date | undefined;
@@ -235,7 +235,7 @@ export const getCategoryAnalysis = async (userId: string, year?: number, month?:
   };
 };
 
-// Get top category function
+
 export const getTopCategory = async (userId: string, year?: number, month?: number) => {
   const analysis = await getCategoryAnalysis(userId, year, month);
   

@@ -24,7 +24,7 @@ export const checkResourceOwnership = (options: OwnershipCheckOptions) => {
         return;
       }
 
-      // Validate ObjectID format for MongoDB
+
       if (!isValidObjectId(resourceId)) {
         error(res, 'Invalid resource ID format', 400);
         return;
@@ -83,7 +83,7 @@ export const checkResourceOwnership = (options: OwnershipCheckOptions) => {
 
       next();
     } catch (err) {
-      // Handle Prisma errors with structured error handling
+
       sendPrismaError(res, err);
       return;
     }

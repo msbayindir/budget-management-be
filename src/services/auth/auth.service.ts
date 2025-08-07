@@ -3,9 +3,9 @@ import { hashPassword, comparePassword } from '../../utils/password';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../../utils/jwt';
 import { RegisterDto, LoginDto, RefreshTokenDto } from '../../validations/auth.validation';
 
-// User registration function
+
 export const registerUser = async (data: RegisterDto) => {
-  // Check if user already exists
+
   const existingUser = await prisma.user.findUnique({
     where: { email: data.email },
   });
@@ -14,10 +14,10 @@ export const registerUser = async (data: RegisterDto) => {
     throw new Error('User with this email already exists');
   }
 
-  // Hash password
+
   const hashedPassword = await hashPassword(data.password);
 
-  // Create user
+
   const user = await prisma.user.create({
     data: {
       email: data.email,
@@ -32,11 +32,11 @@ export const registerUser = async (data: RegisterDto) => {
     },
   });
 
-  // Generate tokens
+
   const accessToken = generateAccessToken({ userId: user.id, email: user.email });
   const refreshToken = generateRefreshToken({ userId: user.id, email: user.email });
 
-  // Save refresh token to database
+
   await prisma.refreshToken.create({
     data: {
       token: refreshToken,
@@ -52,33 +52,37 @@ export const registerUser = async (data: RegisterDto) => {
   };
 };
 
-// User login function
+
 export const loginUser = async (data: LoginDto) => {
-  // Find user by email
+
   const user = await prisma.user.findUnique({
     where: { email: data.email },
   });
 
   if (!user) {
-    throw new Error('Invalid email or password');
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+    throw new Error('Authentication failed');
   }
 
-  // Verify password
+
   const isPasswordValid = await comparePassword(data.password, user.password);
   if (!isPasswordValid) {
-    throw new Error('Invalid email or password');
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+    throw new Error('Authentication failed');
   }
 
-  // Single session policy: Delete all existing refresh tokens for this user
+
   await prisma.refreshToken.deleteMany({
     where: { userId: user.id },
   });
 
-  // Generate tokens
+
   const accessToken = generateAccessToken({ userId: user.id, email: user.email });
   const refreshToken = generateRefreshToken({ userId: user.id, email: user.email });
 
-  // Save new refresh token to database
+
   await prisma.refreshToken.create({
     data: {
       token: refreshToken,
@@ -99,22 +103,24 @@ export const loginUser = async (data: LoginDto) => {
   };
 };
 
-// Refresh token function
+
 export const refreshUserToken = async (data: RefreshTokenDto) => {
   try {
-    // Verify refresh token
+
     const decoded = verifyRefreshToken(data.refreshToken);
 
-    // Check if refresh token exists in database
+
     const storedToken = await prisma.refreshToken.findUnique({
       where: { token: data.refreshToken },
       include: { user: true },
     });
 
-    if (!storedToken || storedToken.expiresAt < new Date()) {
-      throw new Error('Invalid or expired refresh token');
-    }
 
+    if (!storedToken || storedToken.expiresAt < new Date()) {
+
+      await new Promise(resolve => setTimeout(resolve, 100));
+      throw new Error('Authentication failed');
+    }
 
     const accessToken = generateAccessToken({
       userId: storedToken.user.id,
@@ -125,7 +131,7 @@ export const refreshUserToken = async (data: RefreshTokenDto) => {
       email: storedToken.user.email,
     });
 
-    // Delete old refresh token and create new one (Token Rotation)
+
     await prisma.$transaction([
       prisma.refreshToken.delete({
         where: { token: data.refreshToken },
@@ -149,13 +155,14 @@ export const refreshUserToken = async (data: RefreshTokenDto) => {
       refreshToken: newRefreshToken,
     };
   } catch (error) {
-    throw new Error('Invalid or expired refresh token');
+
+    throw new Error('Authentication failed');
   }
 };
 
-// Logout function - now uses userId from access token
+
 export const logoutUser = async (userId: string) => {
-  // Delete all refresh tokens for this user (logout from all devices)
+
   await prisma.refreshToken.deleteMany({
     where: { userId },
   });

@@ -21,14 +21,14 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
   }
   
   try {
-    // Normal JWT doğrulama
+
     const decoded = verifyAccessToken(token);
     
-    // Bu kullanıcının aktif refresh token'ı var mı kontrol et
+
     const activeRefreshToken = await prisma.refreshToken.findFirst({
       where: { 
         userId: decoded.userId,
-        expiresAt: { gt: new Date() } // Süresi geçmemiş
+        expiresAt: { gt: new Date() }
       }
     });
     

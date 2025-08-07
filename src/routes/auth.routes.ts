@@ -7,12 +7,11 @@ import { authLimiter } from '../utils/rateLimiter';
 
 const router: Router = Router();
 
-// Public routes with rate limiting
+
 router.post('/register', authLimiter.middleware(), validateBody(registerSchema), register);
 router.post('/login', authLimiter.middleware(), validateBody(loginSchema), login);
-router.post('/refresh', authLimiter.middleware(), validateBody(refreshTokenSchema), refreshToken);
+router.post('/refresh', authLimiter.middleware(), refreshToken); 
 
-// Protected routes
 router.post('/logout', authenticateToken, logout);
 
 export default router;
