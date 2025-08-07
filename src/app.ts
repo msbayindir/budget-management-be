@@ -1,5 +1,6 @@
 import express, { Application } from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import { config } from './config/env';
 import { swaggerUi, specs } from './config/swagger';
 import routes from './routes';
@@ -7,7 +8,25 @@ import { errorHandler, notFoundHandler } from './middlewares/error.middleware';
 
 const app: Application = express();
 
-// Middleware
+// Security middleware
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https:"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'", "https:", "data:"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"],
+    },
+  },
+  crossOriginEmbedderPolicy: false, // Swagger UI compatibility
+}));
+
+// CORS middleware
 app.use(cors({
   origin: config.cors.origin,
   credentials: true,
