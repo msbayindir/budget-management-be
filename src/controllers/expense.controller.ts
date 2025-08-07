@@ -10,6 +10,7 @@ import {
   getTopCategory 
 } from '../services/expense/expense.service';
 import { success, error } from '../utils/thrower';
+import { sendPrismaError } from '../utils/prismaErrorHandler';
 import { CreateExpenseDto, UpdateExpenseDto, ExpenseQueryDto } from '../validations/expense.validation';
 
 /**
@@ -56,7 +57,7 @@ export const createExpenseController = async (req: Request, res: Response) => {
     const expense = await createExpenseService(userId, data);
     return success(res, 'Expense created successfully', expense, 201);
   } catch (err: any) {
-    return error(res, err.message, 400);
+    return sendPrismaError(res, err);
   }
 };
 

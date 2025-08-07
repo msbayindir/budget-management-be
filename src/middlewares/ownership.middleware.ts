@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { error } from '../utils/thrower';
 import prisma from '../config/database';
+import { sendPrismaError, validateObjectId, isValidObjectId } from '../utils/prismaErrorHandler';
 
 interface OwnershipCheckOptions {
   resourceType: 'expense' | 'user';
@@ -20,6 +21,12 @@ export const checkResourceOwnership = (options: OwnershipCheckOptions) => {
       const resourceId = req.params[options.idParam || 'id'];
       if (!resourceId) {
         error(res, 'Resource ID is required', 400);
+        return;
+      }
+
+      // Validate ObjectID format for MongoDB
+      if (!isValidObjectId(resourceId)) {
+        error(res, 'Invalid resource ID format', 400);
         return;
       }
 
@@ -76,8 +83,8 @@ export const checkResourceOwnership = (options: OwnershipCheckOptions) => {
 
       next();
     } catch (err) {
-      console.error('Ownership check error:', err);
-      error(res, 'Internal server error during ownership check', 500);
+      // Handle Prisma errors with structured error handling
+      sendPrismaError(res, err);
       return;
     }
   };
