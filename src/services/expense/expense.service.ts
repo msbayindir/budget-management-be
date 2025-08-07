@@ -162,6 +162,7 @@ export const getMonthlyTotal = async (userId: string, year: number, month: numbe
   const result = await prisma.expense.aggregate({
     where: {
       userId,
+      isDeleted: false,
       date: {
         gte: startDate,
         lte: endDate,
@@ -192,7 +193,7 @@ export const getCategoryAnalysis = async (userId: string, year?: number, month?:
     endDate = new Date(year, 11, 31, 23, 59, 59);
   }
 
-  const where: any = { userId };
+  const where: any = { userId, isDeleted: false };
   if (startDate && endDate) {
     where.date = {
       gte: startDate,
