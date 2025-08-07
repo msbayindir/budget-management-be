@@ -98,20 +98,26 @@ src/
    ```
 
 3. **Environment Setup**
-   ```bash
-   cp .env.example .env
-   ```
    
-   Update the `.env` file with your configuration:
+   Create a `.env` file in the root directory with the following configuration:
    ```env
-   DATABASE_URL="mongodb://localhost:27017/budget_management"
-   JWT_ACCESS_SECRET="your-super-secret-access-key-here"
-   JWT_REFRESH_SECRET="your-super-secret-refresh-key-here"
-   JWT_ACCESS_EXPIRES_IN="15m"
+   # Database
+   DATABASE_URL="mongodb+srv://admin:admin12345@cluster1.ryqng4b.mongodb.net/budget_management?retryWrites=true&w=majority&appName=Cluster1"
+   
+   # JWT Secrets
+   JWT_ACCESS_SECRET="your-super-secret-access-key-here-change-in-production"
+   JWT_REFRESH_SECRET="your-super-secret-refresh-key-here-change-in-production"
+   
+   # JWT Expiration
+   JWT_ACCESS_EXPIRES_IN="1m"
    JWT_REFRESH_EXPIRES_IN="7d"
+   
+   # Server
    PORT=3000
    NODE_ENV="development"
-   CORS_ORIGIN="http://localhost:3000"
+   
+   # CORS
+   CORS_ORIGIN="http://localhost:3001"
    ```
 
 4. **Database Setup**
