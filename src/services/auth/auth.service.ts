@@ -115,7 +115,7 @@ export const refreshUserToken = async (data: RefreshTokenDto) => {
       throw new Error('Invalid or expired refresh token');
     }
 
-    // Generate new tokens
+
     const accessToken = generateAccessToken({
       userId: storedToken.user.id,
       email: storedToken.user.email,
@@ -125,7 +125,7 @@ export const refreshUserToken = async (data: RefreshTokenDto) => {
       email: storedToken.user.email,
     });
 
-    // Delete old refresh token and create new one
+    // Delete old refresh token and create new one (Token Rotation)
     await prisma.$transaction([
       prisma.refreshToken.delete({
         where: { token: data.refreshToken },
@@ -140,6 +140,11 @@ export const refreshUserToken = async (data: RefreshTokenDto) => {
     ]);
 
     return {
+      user: {
+        id: storedToken.user.id,
+        email: storedToken.user.email,
+        name: storedToken.user.name,
+      },
       accessToken,
       refreshToken: newRefreshToken,
     };

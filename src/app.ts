@@ -1,6 +1,7 @@
 import express, { Application } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import { config } from './config/env';
 import { swaggerUi, specs } from './config/swagger';
 import routes from './routes';
@@ -31,6 +32,9 @@ app.use(cors({
   origin: config.cors.origin,
   credentials: true,
 }));
+
+// Cookie parser middleware (required for refresh token cookies)
+app.use(cookieParser());
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));

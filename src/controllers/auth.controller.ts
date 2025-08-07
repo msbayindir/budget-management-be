@@ -37,7 +37,21 @@ export const register = async (req: Request, res: Response) => {
   try {
     const data: RegisterDto = req.body;
     const result = await registerUser(data);
-    return success(res, 'User registered successfully', result, 201);
+    
+    // Set refresh token as HttpOnly cookie
+    res.cookie('refreshToken', result.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: '/api/auth/refresh'
+    });
+    
+    // Only return access token and user data
+    return success(res, 'User registered successfully', {
+      user: result.user,
+      accessToken: result.accessToken
+    }, 201);
   } catch (err: any) {
     return error(res, err.message, 400);
   }
@@ -74,7 +88,21 @@ export const login = async (req: Request, res: Response) => {
   try {
     const data: LoginDto = req.body;
     const result = await loginUser(data);
-    return success(res, 'Login successful', result);
+    
+    // Set refresh token as HttpOnly cookie
+    res.cookie('refreshToken', result.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: '/api/auth/refresh'
+    });
+    
+    // Only return access token and user data
+    return success(res, 'Login successful', {
+      user: result.user,
+      accessToken: result.accessToken
+    });
   } catch (err: any) {
     return error(res, err.message, 400);
   }
@@ -86,28 +114,49 @@ export const login = async (req: Request, res: Response) => {
  *   post:
  *     summary: Refresh access token
  *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - refreshToken
- *             properties:
- *               refreshToken:
- *                 type: string
+ *     description: Refreshes access token using HttpOnly cookie. No request body required.
  *     responses:
  *       200:
  *         description: Token refreshed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     accessToken:
+ *                       type: string
  *       401:
  *         description: Invalid or expired refresh token
  */
 export const refreshToken = async (req: Request, res: Response) => {
   try {
-    const data: RefreshTokenDto = req.body;
-    const result = await refreshUserToken(data);
-    return success(res, 'Token refreshed successfully', result);
+    // Get refresh token from cookie instead of body
+    const refreshToken = req.cookies.refreshToken;
+    
+    if (!refreshToken) {
+      return error(res, 'Refresh token not found', 401);
+    }
+    
+    const result = await refreshUserToken({ refreshToken });
+    
+    // Set new refresh token as HttpOnly cookie
+    res.cookie('refreshToken', result.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: '/api/auth/refresh'
+    });
+    
+    // Only return new access token
+    return success(res, 'Token refreshed successfully', {
+      accessToken: result.accessToken
+    });
   } catch (err: any) {
     return error(res, err.message, 401);
   }
@@ -133,6 +182,12 @@ export const logout = async (req: Request, res: Response) => {
     }
     
     await logoutUser(userId);
+    
+    // Clear refresh token cookie
+    res.clearCookie('refreshToken', {
+      path: '/api/auth/refresh'
+    });
+    
     return success(res, 'Logout successful');
   } catch (err: any) {
     return error(res, err.message, 400);
